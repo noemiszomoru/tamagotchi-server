@@ -1,5 +1,7 @@
 import * as mysql from "mysql";
 import express = require("express");
+import { Child } from "../models/child.model";
+import { ChildWrapper } from "../models/child.wrapper.model";
 
 export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
@@ -53,42 +55,74 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     app.post("/child", (req: any, res: any) => {
 
-        if (req.body.pk > 0) {
-            db.query('UPDATE children SET name=? , group_id=? WHERE pk=?', [req.body.name, req.body.group_id, req.body.pk], (err: any, rows: any) => {
+        var child = req.body.child as Child;
+        var parentIds = req.body.parentIds as Array<number>;
+
+        console.log(child);
+
+        if (child.pk > 0) {
+            db.query('UPDATE children SET name=? , group_id=? WHERE pk=?', [child.name, child.group_id, child.pk], (err: any, rows: any) => {
                 if (err) {
                     res.json(err);
                     return;
                 }
-                getChildById(req.body.pk, (err: any, rows: any) => {
-                    if (err) {
-                        res.json(err);
-                        return;
-                    }
-                    res.json(rows[0]);
+
+                updateChildParents(child.pk, parentIds, () => {
                 });
+
+                res.json(true);
+
+                // getChildById(child.pk, (err: any, rows: any) => {
+                //     if (err) {
+                //         res.json(err);
+                //         return;
+                //     }
+                //     res.json(rows[0]);
+                // });
             });
 
         } else {
-            db.query('INSERT INTO children (name, group_id) VALUES ( ?,? )', [req.body.name, req.body.group_id], (err: any, rows: any) => {
+            db.query('INSERT INTO children (name, group_id) VALUES ( ?,? )', [child.name, child.group_id], (err: any, rows: any) => {
                 if (err) {
                     res.json(err);
                     return;
                 }
 
-                getChildById(rows.insertId, (err: any, rows: any) => {
-                    if (err) {
-                        res.json(err);
-                        return;
-                    }
+                child.pk = rows.insertId;
 
-                    res.json(rows[0]);
+                updateChildParents(child.pk, parentIds, () => {
                 });
+
+                res.json(true);
+
             });
         }
     });
 
     function getChildById(id: number, callback: Function) {
         db.query('SELECT * FROM children WHERE pk=?', [id], (err: any, res: any) => {
+            callback(err, res);
+        });
+    }
+
+    function updateChildParents(childId: number, parentIds: Array<number>, callback: Function) {
+
+        db.query('DELETE FROM child_parent WHERE child_id=?', [childId], (err: any, res: any) => {
+            if (err) {
+                console.log(err);
+                callback(err);
+                return;
+            }
+            for (let parentId of parentIds) {
+                db.query('INSERT INTO child_parent (child_id, parent_id) VALUES (?,?)'
+                    , [childId, parentId], (err: any, res: any) => {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
+
+            }
+
             callback(err, res);
         });
     }
