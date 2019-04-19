@@ -10,7 +10,7 @@ npm install
 
 Start the typescript compiling in watch mode
 ```
-tsc -w
+tsc -p . -w
 ```
 
 Start server javascript file using nodemon utility which will restart the execution when changes are detected
