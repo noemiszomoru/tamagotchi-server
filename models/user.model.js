@@ -8,6 +8,11 @@ var User = /** @class */ (function () {
         this.email = email;
         this.username = username;
     }
+    User.create = function (input) {
+        var user = new User(input.role, input.name, input.email, input.username);
+        user.pk = input.pk;
+        return user;
+    };
     return User;
 }());
 exports.User = User;

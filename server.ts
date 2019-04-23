@@ -2,20 +2,36 @@ import { GroupsController } from "./controllers/GroupsController";
 import { ChildrenController } from "./controllers/ChildrenController";
 import { UsersController } from "./controllers/UsersController";
 import { FoodSleepController } from "./controllers/FoodSleepController";
+import { LoginController } from "./controllers/LoginController";
 
 import * as mysql from "mysql";
 import express = require("express");
+import bodyParser = require("body-parser");
 import jwt = require("jsonwebtoken");
-
+import bcrypt = require('bcryptjs');
 
 //const express = 
 const app = express();
 const port = 8080; // default port to listen
+const router = express.Router();
 app.use(express.json());
 app.set('json spaces', 2);
 
+router.use(bodyParser.urlencoded({ extended: false }));
+router.use(bodyParser.json());
+
+app.use(router);
+
+var timeout = require('connect-timeout'); //express v4
+function haltOnTimedout(req: any, res: any, next: any) {
+    if (!req.timedout) next();
+}
+app.use(timeout(2000));
+app.use(haltOnTimedout);
+
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
@@ -38,20 +54,14 @@ connection.connect((err: any) => {
     ChildrenController(app, connection);
     UsersController(app, connection);
     FoodSleepController(app, connection);
+    LoginController(app, connection);
 });
 
 
 // define a route handler for the default home page
 app.get("/", (req: any, res: any) => {
-    res.send("Hello world!");
+    res.send("");
 });
-
-app.post('/login', (req, res) => {
-
-    // jwt.sign();
-
-});
-
 
 // Queries example
 // SELECT * FROM tamagotchi.children;

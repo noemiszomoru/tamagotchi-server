@@ -1,3 +1,5 @@
+import { userInfo } from "os";
+
 export class User {
     public pk: number = 0;
     public role: string;
@@ -10,5 +12,17 @@ export class User {
         this.name = name;
         this.email = email;
         this.username = username;
+    }
+
+    static create(input: any): User {
+        const user = new User(
+            input.role,
+            input.name,
+            input.email,
+            input.username
+        );
+        user.pk = input.pk;
+
+        return user;
     }
 }

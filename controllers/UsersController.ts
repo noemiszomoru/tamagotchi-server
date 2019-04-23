@@ -1,5 +1,6 @@
 import * as mysql from "mysql";
 import express = require("express");
+import { User } from "../models/user.model";
 
 export function UsersController(app: express.Express, db: mysql.Connection) {
 
@@ -18,6 +19,24 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
 
     });
 
+    // Return user by email
+    app.get("/user", (req: express.Request, res: express.Response) => {
+
+        db.query('SELECT * FROM `users` WHERE email=?', [req.body.email], (err: any, rows: User[]) => {
+            if (err) {
+                res.json(err);
+                return;
+            }
+            if (rows.length) {
+                res.json(rows[0].username);
+            } else {
+                res.json(null);
+            }
+
+        });
+
+    });
+
     // Create user
     app.post("/user", (req: any, res: any) => {
 
@@ -27,9 +46,9 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
                 return;
             }
             res.json(true);
-    
+
         });
-    
+
     });
 
     // Update user
@@ -41,9 +60,9 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
                 return;
             }
             res.json(true);
-    
+
         });
-        
+
     });
 
     // Delete user
@@ -55,9 +74,9 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
                 return;
             }
             res.json(true);
-    
+
         });
-        
+
     });
 
 }

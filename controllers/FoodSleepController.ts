@@ -62,6 +62,7 @@ export function FoodSleepController(app: express.Express, db: mysql.Connection) 
                     FROM \`children\` AS c 
                     LEFT JOIN food AS f ON c.pk=f.child_id AND f.date=?
                     LEFT JOIN sleep AS s ON c.pk=s.child_id AND s.date=?`;
+
         var queryArgs = [req.params.date, req.params.date];
         // if (parent) {
         //     query += ' AND parent_id=?';
