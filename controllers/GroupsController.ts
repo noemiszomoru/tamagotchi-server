@@ -2,11 +2,13 @@ import * as mysql from "mysql";
 import express = require("express");
 import { Group } from "../models/group.model";
 
+const passport = require("passport");
+
 export function GroupsController(app: express.Express, db: mysql.Connection) {
 
 
     // Return list of groups
-    app.get("/groups", (req: express.Request, res: express.Response) => {
+    app.get("/groups", passport.authenticate('jwt', { session: false }), (req: express.Request, res: express.Response) => {
 
         db.query('SELECT * FROM `groups`', [], (err: any, rows: any) => {
             if (err) {
@@ -21,7 +23,7 @@ export function GroupsController(app: express.Express, db: mysql.Connection) {
 
     // Return group by id
 
-    app.get("/group/:id", (req: any, res: any) => {
+    app.get("/group/:id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         db.query('SELECT * FROM `groups` WHERE pk=?', [req.params.id], (err: any, rows: any) => {
             if (err) {
@@ -38,7 +40,7 @@ export function GroupsController(app: express.Express, db: mysql.Connection) {
 
 
     // Create group
-    app.post("/group", (req: any, res: any) => {
+    app.post("/group", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         var group = req.body as Group;
 
@@ -84,7 +86,7 @@ export function GroupsController(app: express.Express, db: mysql.Connection) {
 
 
     // Delete group
-    app.delete("/groups/:id", (req: any, res: any) => {
+    app.delete("/groups/:id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         db.query('DELETE FROM `groups` WHERE pk=?', [req.params.id], (err: any, rows: any) => {
             if (err) {

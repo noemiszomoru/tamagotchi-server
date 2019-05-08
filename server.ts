@@ -9,10 +9,35 @@ import express = require("express");
 import bodyParser = require("body-parser");
 import jwt = require("jsonwebtoken");
 import bcrypt = require('bcryptjs');
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+const SECRET_KEY = "secretkey23456";
+const passportOpts = {
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: SECRET_KEY
+};
 
 //const express = 
 const app = express();
 const port = 8080; // default port to listen
+const passport = require("passport");
+app.use(passport.initialize());
+// app.use(passport.session());
+
+passport.use(new JwtStrategy(passportOpts, function (jwtPayload: any, done: any) {
+    const expirationDate = new Date(jwtPayload.exp * 1000);
+    console.log(`Strategy expiration time ${jwtPayload.exp}`);
+    if (expirationDate < new Date()) {
+        return done(null, false);
+    }
+    done(null, jwtPayload);
+}))
+
+passport.serializeUser(function (user: any, done: any) {
+    console.log(`Serialize user ${JSON.stringify(user)}`);
+    done(null, user.username)
+});
+
 const router = express.Router();
 app.use(express.json());
 app.set('json spaces', 2);
@@ -32,7 +57,8 @@ app.use(haltOnTimedout);
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
     next();
 });
 

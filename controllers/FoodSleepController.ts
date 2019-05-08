@@ -1,11 +1,13 @@
 import * as mysql from "mysql";
 import express = require("express");
 
+const passport = require("passport");
+
 export function FoodSleepController(app: express.Express, db: mysql.Connection) {
 
 
     // Return list of food and sleep for all children
-    app.get("/food-sleep", (req: express.Request, res: express.Response) => {
+    app.get("/food-sleep", passport.authenticate('jwt', { session: false }), (req: express.Request, res: express.Response) => {
 
         db.query('SELECT children.pk, children.name, children.group_id, food.date, food.breakfast, food.soup, food.main_dish, sleep.start_at, sleep.end_at' +
             ' FROM ((`children` LEFT JOIN food ON children.pk=food.child_id OR food.date IS NULL) LEFT JOIN sleep ON children.pk=sleep.child_id AND food.date=sleep.date)', [], (err: any, rows: any) => {
@@ -22,7 +24,7 @@ export function FoodSleepController(app: express.Express, db: mysql.Connection) 
 
     // Return list of food and sleep for children by group
 
-    app.get("/food-sleep/group/:group", (req: any, res: any) => {
+    app.get("/food-sleep/group/:group", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         var filter = req.query.filter ? req.query.filter : '';
         var parent = req.query.parent ? req.query.parent : 0;
@@ -50,7 +52,7 @@ export function FoodSleepController(app: express.Express, db: mysql.Connection) 
 
     // Return list of food and sleep for children by date
 
-    app.get("/food-sleep/:date", (req: any, res: any) => {
+    app.get("/food-sleep/:date", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         // var filter = req.query.filter ? req.query.filter : '';
         // var parent = req.query.parent ? req.query.parent : 0;
@@ -85,7 +87,7 @@ export function FoodSleepController(app: express.Express, db: mysql.Connection) 
 
     // Create/Update food entry
 
-    app.post("/food", (req: any, res: any) => {
+    app.post("/food", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         db.query('UPDATE food SET breakfast=?, soup=?, main_dish=? WHERE child_id=? AND date=?',
             [
@@ -130,7 +132,7 @@ export function FoodSleepController(app: express.Express, db: mysql.Connection) 
 
     // Create/Update sleep entry
 
-    app.post("/sleep", (req: any, res: any) => {
+    app.post("/sleep", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         db.query('UPDATE sleep SET start_at=?, end_at=? WHERE child_id=? AND date=?',
             [

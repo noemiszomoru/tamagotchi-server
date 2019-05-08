@@ -3,11 +3,13 @@ import express = require("express");
 import { Child } from "../models/child.model";
 import { ChildWrapper } from "../models/child.wrapper.model";
 
+const passport = require("passport");
+
 export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     // Return list of children
 
-    app.get("/children", (req: express.Request, res: express.Response) => {
+    app.get("/children", passport.authenticate('jwt', { session: false }), (req: express.Request, res: express.Response) => {
 
         db.query('SELECT * FROM `children`', [], (err: any, rows: any) => {
             if (err) {
@@ -23,7 +25,7 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     // Return list of children by group
 
-    app.get("/children/:group", (req: any, res: any) => {
+    app.get("/children/:group", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
         // console.log(childObject.name);
 
         // var childObject = JSON.parse(req.query.childData);
@@ -53,7 +55,7 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     // Create/Update child
 
-    app.post("/child", (req: any, res: any) => {
+    app.post("/child", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         var child = req.body.child as Child;
         var parentIds = req.body.parentIds as Array<number>;
