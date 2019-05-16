@@ -62,8 +62,6 @@ app.use(function (req, res, next) {
     next();
 });
 
-
-
 //connect o mysql
 
 const connection = mysql.createConnection({

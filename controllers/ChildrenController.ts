@@ -22,6 +22,22 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     });
 
+    // Return group by id
+
+    app.get("/child/:id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
+
+        db.query('SELECT * FROM `children` WHERE pk=?', [req.params.id], (err: any, rows: any) => {
+            if (err) {
+                res.json(err);
+                return;
+            }
+            res.json(rows[0]);
+
+        });
+
+
+    });
+
 
     // Return list of children by group
 
