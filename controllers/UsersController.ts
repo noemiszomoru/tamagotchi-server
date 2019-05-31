@@ -22,6 +22,7 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
     });
 
     // Return user by username
+
     app.get("/user", passport.authenticate('jwt', { session: false }), (req: express.Request, res: express.Response) => {
 
         db.query('SELECT * FROM `users` WHERE username=?', [req.body.username], (err: any, rows: User[]) => {
@@ -39,7 +40,24 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
 
     });
 
+    // Return user by id
+
+    app.get("/user/:id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
+
+        db.query('SELECT * FROM `users` WHERE pk=?', [req.params.id], (err: any, rows: any) => {
+            if (err) {
+                res.json(err);
+                return;
+            }
+            res.json(rows[0]);
+
+        });
+
+
+    });
+
     // Create user
+
     app.post("/user", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
         db.query('INSERT INTO `users` (role, name, email, username, password) VALUES (?,?,?,?,?)', [req.body.role, req.body.name, req.body.email, req.body.username, req.body.password], (err: any, rows: any) => {
@@ -68,9 +86,9 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
     });
 
     // Delete user
-    app.delete("/users/:user", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
+    app.delete("/users/:id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
-        db.query('DELETE FROM `users` WHERE pk=?', [req.params.user], (err: any, rows: any) => {
+        db.query('DELETE FROM `users` WHERE pk=?', [req.params.id], (err: any, rows: any) => {
             if (err) {
                 res.json(false);
                 return;

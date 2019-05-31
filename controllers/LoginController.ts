@@ -154,6 +154,7 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
             }
 
             const user = rows[0];
+            console.log(user);
             const result = bcrypt.compareSync(req.body.password, (user as any).password);
             if (!result) {
                 return res.status(401).send('Password not valid!');

@@ -37,8 +37,6 @@ export function GroupsController(app: express.Express, db: mysql.Connection) {
 
     });
 
-
-
     // Create group
     app.post("/group", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 

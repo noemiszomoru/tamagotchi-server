@@ -68,7 +68,8 @@ const connection = mysql.createConnection({
     host: 'localhost',
     user: 'tamagotchi',
     password: 'Mahacskin13',
-    database: 'tamagotchi'
+    database: 'tamagotchi',
+    multipleStatements: true
 });
 
 connection.connect((err: any) => {

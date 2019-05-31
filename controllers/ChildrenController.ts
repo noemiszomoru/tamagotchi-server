@@ -22,21 +22,46 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     });
 
-    // Return group by id
+    // Return child by id
 
     app.get("/child/:id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
-        db.query('SELECT * FROM `children` WHERE pk=?', [req.params.id], (err: any, rows: any) => {
-            if (err) {
-                res.json(err);
-                return;
-            }
-            res.json(rows[0]);
+        db.query('SELECT c.pk, c.name, c.group_id, u.pk AS parent_id ' +
+            'FROM children AS c ' +
+            'LEFT JOIN child_parent AS cp ON cp.child_id=c.pk ' +
+            'INNER JOIN users AS u ON cp.parent_id=u.pk ' +
+            'WHERE c.pk=?', [req.params.id], (err: any, rows: any) => {
+                if (err) {
+                    res.json(err);
+                    return;
+                }
+                res.json(rows[0]);
 
-        });
-
-
+            });
     });
+
+    // Return child_parent connections by child_id
+
+    app.get("/child-parent/:child_id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
+        console.log(`asdasd`);
+
+        db.query('SELECT u.pk, u.role, u.name, u.email, u.username FROM users as u ' +
+            'INNER JOIN child_parent as cp ' +
+            'ON u.pk=cp.parent_id ' +
+            'WHERE cp.child_id=?'
+            , [req.params.child_id], (err: any, array: any) => {
+                if (err) {
+                    res.json(err);
+                    return;
+                }
+                console.log(array);
+                res.json(array);
+
+
+            });
+    });
+
+
 
 
     // Return list of children by group
@@ -89,6 +114,7 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
                 });
 
                 res.json(true);
+                console.log('asta de cate ori?');
 
                 // getChildById(child.pk, (err: any, rows: any) => {
                 //     if (err) {
@@ -112,9 +138,23 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
                 });
 
                 res.json(true);
-
             });
         }
+    });
+
+    // Delete child
+
+    app.delete("/children/:id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
+
+        db.query('DELETE FROM `children` WHERE pk=?', [req.params.id], (err: any, rows: any) => {
+            if (err) {
+                res.json(false);
+                return;
+            }
+            res.json(true);
+
+        });
+
     });
 
     function getChildById(id: number, callback: Function) {
@@ -125,24 +165,24 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     function updateChildParents(childId: number, parentIds: Array<number>, callback: Function) {
 
-        db.query('DELETE FROM child_parent WHERE child_id=?', [childId], (err: any, res: any) => {
-            if (err) {
-                console.log(err);
-                callback(err);
-                return;
-            }
-            for (let parentId of parentIds) {
-                db.query('INSERT INTO child_parent (child_id, parent_id) VALUES (?,?)'
-                    , [childId, parentId], (err: any, res: any) => {
-                        if (err) {
-                            console.log(err);
-                        }
-                    });
+        // db.query('DELETE FROM child_parent WHERE child_id=?', [childId], (err: any, res: any) => {
+        //     if (err) {
+        //         console.log(err);
+        //         callback(err);
+        //         return;
+        //     }
+        for (let parentId of parentIds) {
+            db.query('INSERT INTO child_parent (child_id, parent_id) VALUES (?,?)'
+                , [childId, parentId], (err: any, res: any) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
 
-            }
+        }
 
-            callback(err, res);
-        });
+        // callback(err, res);
+        // });
     }
 
 }
