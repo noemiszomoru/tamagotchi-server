@@ -21,6 +21,21 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
 
     });
 
+    // Return list of user  roles
+    app.get("/user-roles", passport.authenticate('jwt', { session: false }), (req: express.Request, res: express.Response) => {
+
+        db.query('SELECT DISTINCT role FROM `users`', [], (err: any, rows: any) => {
+            if (err) {
+                res.json(err);
+                return;
+            }
+            res.json(rows);
+
+        });
+
+    });
+
+
     // Return user by username
 
     app.get("/user", passport.authenticate('jwt', { session: false }), (req: express.Request, res: express.Response) => {
@@ -72,11 +87,11 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
     });
 
     // Update user
-    app.put("/users/:user", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
+    app.put("/user", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
 
-        db.query('UPDATE `users` SET role=?, name=?, email=?, username=?, password=? WHERE pk=?', [req.body.role, req.body.name, req.body.email, req.body.username, req.body.password, req.params.user], (err: any, rows: any) => {
+        db.query('UPDATE `users` SET name=?, role=?, email=?, username=? WHERE pk=?', [req.body.name, req.body.role, req.body.email, req.body.username, req.body.pk], (err: any, rows: any) => {
             if (err) {
-                res.json(false);
+                res.json(err);
                 return;
             }
             res.json(true);

@@ -4,6 +4,7 @@ import bcrypt = require('bcryptjs');
 import jwt = require("jsonwebtoken");
 import { User } from "../models/user.model";
 import { UsersController } from "./UsersController";
+import { IQueryResult } from "./models/IQueryResult";
 const passport = require("passport");
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
@@ -17,36 +18,75 @@ const passportOpts = {
     secretOrKey: SECRET_KEY
 };
 
+const EXPIRES_IN = 24 * 60 * 60;
+
+function buildToken(userId: number, userName: string, userRole: string, expiresIn: number) {
+    return jwt.sign({
+        id: userId,
+        name: userName,
+        role: userRole
+    }, SECRET_KEY, {
+            expiresIn
+        });
+}
+
+export interface IUser {
+    length: number;
+    pk: number;
+    name: string;
+    username: string;
+    email: string;
+    role: string;
+    password: string;
+}
+
+export async function getTokenUser(db: mysql.Connection, token: string): Promise<IUser> {
+    return new Promise((resolve, reject) => {
+        db.query('SELECT users.pk, users.role, users.name FROM user_token LEFT JOIN users ON users.pk=user_token.user_id WHERE user_token.token=?', [token], (err: any, rows: IUser) => {
+            if (err) {
+                console.log(err);
+                return reject(null);
+            }
+
+            if (!rows || rows.length == 0) {
+                return reject(null);
+            }
+
+            return resolve(rows);
+        });
+    });
+
+
+}
+
 export function LoginController(app: express.Express, db: mysql.Connection) {
 
     app.post("/sendEmail", (req: any, res: any) => {
 
-        db.query('INSERT INTO `users` (role, name, email, username) VALUES (?,?,?,?)',
-            [req.body.role, req.body.name, req.body.email, req.body.username], (err: any, rows: any) => {
+        const user = new User(req.body.role, req.body.name, req.body.email, req.body.username);
+
+        db.query('INSERT INTO `users` (name, role, email, username) VALUES (?,?,?,?)',
+            [user.name, user.role, user.email, user.username], (err: any, result: IQueryResult) => {
                 if (err) {
-                    // return res.status(500).send("Server error1!");
-                    res.json(err);
-                    return;
+                    console.log(err);
+                    return res.json(err);
                 }
 
-                console.log(rows[0]);
+                user.pk = result.insertId;
 
-                const expiresIn = 24 * 60 * 60;
-                const accessToken = jwt.sign({ id: rows.insertId }, SECRET_KEY, {
-                    expiresIn: expiresIn
-                });
+                const accessToken = buildToken(user.pk, user.username, user.role, EXPIRES_IN);
+                const refreshToken = randtoken.uid(256);
 
-                db.query('INSERT INTO user_token (user_id, token, expire, created) VALUES (?, ?, ?, NOW())', [
-                    rows.insertId, accessToken, expiresIn
-                ], (err: any, rows: User[]) => {
+                db.query('INSERT INTO user_token (user_id, token, expire, created, refresh_token) VALUES (?, ?, ?, NOW(), ?)', [
+                    user.pk, accessToken, EXPIRES_IN, refreshToken
+                ], (err: any, result: IQueryResult) => {
                     if (err) {
-                        return res.status(500).send('Token storage error');
+                        return res.status(500).send(err);
                     }
 
-                    return res.json({ "user": User.create(rows[0]), "accessToken": accessToken, "expiresIn": expiresIn });
+                    // return res.json({ "user": User.create(rows[0]), "accessToken": accessToken, "expiresIn": expiresIn, "refreshToken": refreshToken });
+                    return res.json(true);
                 });
-
-
 
                 let transporter = nodeMailer.createTransport({
                     service: 'Gmail',
@@ -60,6 +100,8 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
                         }
                     }
                 });
+
+                console.log(req.body);
 
                 let mailOptions = {
                     from: '"Tamagotchi app" <noemi.szomoru@gmail.com>', // sender address
@@ -112,6 +154,7 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
         });
     });
 
+    /** DEPRECATED */
     app.post("/register", (req: any, res: any) => {
 
         var password = bcrypt.hashSync(req.body.password);
@@ -143,11 +186,10 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
     app.post("/login", (req: any, res: any) => {
         console.log(`Login ... ...`);
 
-        db.query('SELECT * FROM `users` WHERE username=?', [req.body.username], (err: any, rows: User[]) => {
+        db.query('SELECT * FROM `users` WHERE username=?', [req.body.username], (err: any, rows: IUser[]) => {
             if (err) {
                 return res.status(500).json(err);
             }
-
 
             if (rows.length != 1) {
                 return res.status(404).send('User not found!');
@@ -155,50 +197,50 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
 
             const user = rows[0];
             console.log(user);
-            const result = bcrypt.compareSync(req.body.password, (user as any).password);
+            const result = bcrypt.compareSync(req.body.password, user.password);
             if (!result) {
                 return res.status(401).send('Password not valid!');
             }
-            const expiresIn = 24 * 60 * 60;
-            const accessToken = jwt.sign({ id: user.pk }, SECRET_KEY, {
-                expiresIn: expiresIn
-            });
+
+            const accessToken = buildToken(user.pk, user.username, user.role, EXPIRES_IN);
             const refreshToken = randtoken.uid(256);
-            console.log(refreshToken);
 
             db.query('INSERT INTO user_token (user_id, token, expire, created, refresh_token) VALUES (?, ?, ?, NOW(), ?)', [
-                user.pk, accessToken, expiresIn, refreshToken
+                user.pk, accessToken, EXPIRES_IN, refreshToken
             ], (err: any, rows: User[]) => {
                 if (err) {
                     return res.status(500).send('Token storage error');
                 }
 
-                return res.json({ "user": User.create(user), "accessToken": accessToken, "expiresIn": expiresIn, "refreshToken": refreshToken });
+                return res.json({ "user": User.create(user), "accessToken": accessToken, "expiresIn": EXPIRES_IN, "refreshToken": refreshToken });
             });
         });
     });
 
     app.post("/refresh", (req: any, res: any) => {
 
-        db.query('SELECT * FROM `user_token` WHERE refresh_token=?', [req.body.refreshToken], (err: any, rows: User[]) => {
+        db.query('SELECT * FROM `user_token` WHERE refresh_token=?', [req.body.refreshToken], (err: any, rows: IUser[]) => {
             if (err) {
                 res.json(err);
                 return;
             }
             const user = rows[0];
-            const expiresIn = 24 * 60 * 60;
-            const accessToken = jwt.sign({ id: user.pk }, SECRET_KEY, {
-                expiresIn: expiresIn
-            });
+
+            const accessToken = buildToken(user.pk, user.username, user.role, EXPIRES_IN);
+
+            // const expiresIn = 24 * 60 * 60;
+            // const accessToken = jwt.sign({ id: user.pk }, SECRET_KEY, {
+            //     expiresIn: expiresIn
+            // });
 
             db.query('INSERT INTO user_token (user_id, token, expire, created) VALUES (?, ?, ?, NOW())', [
-                user.pk, accessToken, expiresIn
+                user.pk, accessToken, EXPIRES_IN
             ], (err: any, rows: User[]) => {
                 if (err) {
                     return res.status(500).send('Token storage error');
                 }
 
-                return res.json({ "user": User.create(user), "accessToken": accessToken, "expiresIn": expiresIn });
+                return res.json({ "user": User.create(user), "accessToken": accessToken, "expiresIn": EXPIRES_IN });
             });
 
         });
@@ -206,7 +248,7 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
 
     app.delete("/logout", (req: any, res: any, next) => {
 
-        db.query('DELETE FROM `user_token` WHERE refresh_token=?', [req.body.refreshToken], (err: any, rows: User[]) => {
+        db.query('DELETE FROM `user_token` WHERE refresh_token=?', [req.body.refreshToken], (err: any, rows: IQueryResult) => {
             if (err) {
                 res.json(false);
                 return;
@@ -215,12 +257,6 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
 
         });
     });
-
-
-    // function sendEmail(to: string, subject: string, body: string) {
-
-    // }
-
 }
 
 exports.LoginController = LoginController;

@@ -1,5 +1,6 @@
 import * as mysql from "mysql";
 import express = require("express");
+import { getTokenUser } from "./LoginController";
 
 const passport = require("passport");
 
@@ -52,7 +53,12 @@ export function FoodSleepController(app: express.Express, db: mysql.Connection) 
 
     // Return list of food and sleep for children by date
 
-    app.get("/food-sleep/:date", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
+    app.get("/food-sleep/:date", passport.authenticate('jwt', { session: false }), async (req: any, res: any) => {
+
+        const userInfo = await getTokenUser(db, req.header('Authorization').substr(7));
+
+        console.log(`User info`);
+        console.log(userInfo);
 
         // var filter = req.query.filter ? req.query.filter : '';
         var parent_id = req.query.parent_id ? req.query.parent_id : 0;
@@ -62,16 +68,16 @@ export function FoodSleepController(app: express.Express, db: mysql.Connection) 
                         f.date, f.breakfast, f.soup, f.main_dish, 
                         s.start_at, s.end_at
                     FROM \`children\` AS c 
-                    INNER JOIN child_parent AS cp ON cp.child_id=c.pk
                     LEFT JOIN food AS f ON c.pk=f.child_id AND f.date=?
                     LEFT JOIN sleep AS s ON c.pk=s.child_id AND s.date=?
                     `;
 
         var queryArgs = [req.params.date, req.params.date];
 
-        if (parent_id) {
-            query += `WHERE cp.parent_id=?`;
-            queryArgs.push(parent_id);
+        if (userInfo.role == 'parent') {
+            query += ` INNER JOIN child_parent AS cp ON cp.child_id=c.pk`;
+            queryArgs.push(userInfo.pk);
+            query += ` WHERE cp.parent_id=?`;
         }
 
         console.log('Query:' + query);

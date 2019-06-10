@@ -61,9 +61,6 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
             });
     });
 
-
-
-
     // Return list of children by group
 
     app.get("/children/:group", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
