@@ -4,11 +4,40 @@ import { UsersController } from "./controllers/UsersController";
 import { FoodSleepController } from "./controllers/FoodSleepController";
 import { LoginController } from "./controllers/LoginController";
 
+import * as fs from "fs";
+
 import * as mysql from "mysql";
 import express = require("express");
 import bodyParser = require("body-parser");
 import jwt = require("jsonwebtoken");
 import bcrypt = require('bcryptjs');
+
+const CONFIG_FILE = '../server.json';
+
+// Default config object 
+let config = {
+    db: {
+        host: 'localhost',
+        port: 3306,
+        user: 'tamagotchi',
+        password: 'Mahacskin13',
+        database: 'tamagotchi',
+        multipleStatements: true
+    },
+    listen: {
+        port: 8080,
+        host: '127.0.0.1'
+    }
+};
+
+//If we have a config file, then we will read it instead of the default one
+if (fs.existsSync(CONFIG_FILE)) {
+    config = JSON.parse(fs.readFileSync('../server.json').toString());
+    console.log(`Custom server configuration file loaded.`);
+} else {
+    console.log(`Server configuration file was not found at ${CONFIG_FILE}. Using default ...`);
+}
+
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const SECRET_KEY = "secretkey23456";
@@ -19,7 +48,6 @@ const passportOpts = {
 
 //const express = 
 const app = express();
-const port = 8080; // default port to listen
 const passport = require("passport");
 app.use(passport.initialize());
 // app.use(passport.session());
@@ -64,17 +92,11 @@ app.use(function (req, res, next) {
 
 //connect o mysql
 
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'tamagotchi',
-    password: 'Mahacskin13',
-    database: 'tamagotchi',
-    multipleStatements: true
-});
+const connection = mysql.createConnection(config.db);
 
 connection.connect((err: any) => {
     if (err) throw err;
-    console.log('Connected!');
+    console.log('Succefully connected to database');
     GroupsController(app, connection);
     ChildrenController(app, connection);
     UsersController(app, connection);
@@ -95,7 +117,7 @@ app.get("/", (req: any, res: any) => {
 // UPDATE children SET name= 'Flavi' WHERE pk=4
 
 // start the Express server
-app.listen(port, () => {
-    console.log(`server started at http://localhost:${port}`);
+app.listen(config.listen.port, config.listen.host, () => {
+    console.log(`Server listening on ${config.listen.host}:${config.listen.port}`);
 });
 
