@@ -29,7 +29,7 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
         db.query('SELECT c.pk, c.name, c.group_id, u.pk AS parent_id ' +
             'FROM children AS c ' +
             'LEFT JOIN child_parent AS cp ON cp.child_id=c.pk ' +
-            'INNER JOIN users AS u ON cp.parent_id=u.pk ' +
+            'LEFT JOIN users AS u ON cp.parent_id=u.pk ' +
             'WHERE c.pk=?', [req.params.id], (err: any, rows: any) => {
                 if (err) {
                     res.json(err);
@@ -162,26 +162,29 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     function updateChildParents(childId: number, parentIds: Array<number>, callback: Function) {
 
-        // db.query('DELETE FROM child_parent WHERE child_id=?', [childId], (err: any, res: any) => {
-        //     if (err) {
-        //         console.log(err);
-        //         callback(err);
-        //         return;
-        //     }
-        for (let parentId of parentIds) {
-            db.query('INSERT INTO child_parent (child_id, parent_id) VALUES (?,?)'
-                , [childId, parentId], (err: any, res: any) => {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
+        console.log(parentIds);
 
-        }
+        db.query('DELETE FROM child_parent WHERE child_id=?', [childId], (err: any, res: any) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
 
-        // callback(err, res);
-        // });
+            for (let parentId of parentIds) {
+                db.query('INSERT INTO child_parent (child_id, parent_id) VALUES (?,?)'
+                    , [childId, parentId], (err: any, res: any) => {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
+
+            }
+
+
+            // callback(err, res);
+            // });
+        });
+
     }
 
-}
-
-exports.ChildrenController = ChildrenController;
+    exports.ChildrenController = ChildrenController;
