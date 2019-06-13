@@ -350,6 +350,10 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
             }
             const user = rows[0];
 
+            if (!user) {
+                return res.status(500).send('Token refresh error');
+            }
+
             const accessToken = buildToken(user.pk, user.username, user.role, EXPIRES_IN);
 
             // const expiresIn = 24 * 60 * 60;
