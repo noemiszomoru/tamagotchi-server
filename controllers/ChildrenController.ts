@@ -187,4 +187,6 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
 
     }
 
-    exports.ChildrenController = ChildrenController;
+}
+
+exports.ChildrenController = ChildrenController;
