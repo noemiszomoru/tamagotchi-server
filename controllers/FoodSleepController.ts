@@ -74,6 +74,11 @@ export function FoodSleepController(app: express.Express, db: mysql.Connection) 
 
         var queryArgs = [req.params.date, req.params.date];
 
+        if (req.query.group) {
+            query += `WHERE c.group_id=?`;
+            queryArgs.push(req.query.group);
+        }
+
         if (userInfo.role == 'parent') {
             query += ` INNER JOIN child_parent AS cp ON cp.child_id=c.pk`;
             queryArgs.push(userInfo.pk);
