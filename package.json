@@ -23,8 +23,7 @@
     },
     "devDependencies": {},
     "scripts": {
-        "install": "npm ci",
-        "build": "tsc",
+        "build": "npm ci && tsc",
         "server": "node server.js"
     },
     "author": "",
