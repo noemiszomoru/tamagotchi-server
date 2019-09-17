@@ -25,9 +25,9 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
     app.get("/user-roles", passport.authenticate('jwt', { session: false }), (req: express.Request, res: express.Response) => {
 
         res.json([
-            "admin",
-            "teacher",
-            "parent"
+            { "role": "admin" },
+            { "role": "teacher" },
+            { "role": "parent" }
         ]);
 
     });
