@@ -24,14 +24,11 @@ export function UsersController(app: express.Express, db: mysql.Connection) {
     // Return list of user  roles
     app.get("/user-roles", passport.authenticate('jwt', { session: false }), (req: express.Request, res: express.Response) => {
 
-        db.query('SELECT DISTINCT role FROM `users`', [], (err: any, rows: any) => {
-            if (err) {
-                res.json(err);
-                return;
-            }
-            res.json(rows);
-
-        });
+        res.json([
+            "admin",
+            "teacher",
+            "parent"
+        ]);
 
     });
 
