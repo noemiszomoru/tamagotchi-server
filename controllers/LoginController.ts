@@ -26,8 +26,8 @@ function buildToken(userId: number, userName: string, userRole: string, expiresI
         name: userName,
         role: userRole
     }, SECRET_KEY, {
-            expiresIn
-        });
+        expiresIn
+    });
 }
 
 export interface IUser {
@@ -106,7 +106,7 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
                 console.log(req.body);
 
                 let mailOptions = {
-                    from: '"Tamagotchi app" <noemi.szomoru@gmail.com>', // sender address
+                    from: '"Tamagotchi app" <noreply.tamagotchi@gmail.com>', // sender address
                     to: req.body.email, // list of receivers
                     subject: `Your Tamagotchi ${req.body.role} account was created`, // Subject line
                     text: 'Your account was created. Please click on the following url to set your password', // plain text body
@@ -160,11 +160,11 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
 <table align="center" cellpadding="0" cellspacing="0" class="page-center" style="text-align: left; padding-bottom: 88px; width: 100%; padding-left: 120px; padding-right: 120px;">
 <tbody><tr>
 <td style="padding-top: 24px;">
-<img src="https://tamagotchi.freejack.ro/assets/logo.png" style="width: 56px;">
+<img src="https://tamagotchi.freejack.ro/assets/logo.png" style="width: 56px; margin: 0 auto">
 </td>
 </tr>
 <tr>
-<td colspan="2" style="padding-top: 72px; -ms-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; color: #000000; font-family: 'Postmates Std', 'Helvetica', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 48px; font-smoothing: always; font-style: normal; font-weight: 600; letter-spacing: -2.6px; line-height: 52px; mso-line-height-rule: exactly; text-decoration: none;">Set your password</td>
+<td colspan="2" style="padding-top: 72px; -ms-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; color: #000000; font-family: 'Postmates Std', 'Helvetica', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 38px; font-smoothing: always; font-style: normal; font-weight: 600; letter-spacing: -2.6px; line-height: 52px; mso-line-height-rule: exactly; text-decoration: none;">Set your password</td>
 </tr>
 <tr>
 <td style="padding-top: 48px; padding-bottom: 48px;">
@@ -177,7 +177,7 @@ export function LoginController(app: express.Express, db: mysql.Connection) {
 </tr>
 <tr>
 <td style="-ms-text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; color: #9095a2; font-family: 'Postmates Std', 'Helvetica', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; font-size: 16px; font-smoothing: always; font-style: normal; font-weight: 400; letter-spacing: -0.18px; line-height: 24px; mso-line-height-rule: exactly; text-decoration: none; vertical-align: top; width: 100%;">
-                                      You're receiving this e-mail to inform you of the creation of your Tamagotchi ${req.body.role} account .
+                                      You're receiving this e-mail to inform you of the creation of your <strong>Tamagotchi <span style="text-transform: capitalize;">${req.body.role}</span> account</strong> .
                                     </td>
 </tr>
 <tr>

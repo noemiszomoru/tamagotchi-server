@@ -40,6 +40,31 @@ export function ChildrenController(app: express.Express, db: mysql.Connection) {
             });
     });
 
+    // Return group pk  by user_id
+
+    app.get("/group/:user_id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {
+        console.log(`asdasd`);
+
+        db.query('SELECT u.pk, u.username, g.pk, g.name FROM groups as g ' +
+            'INNER JOIN children as c ' +
+            'ON g.pk=c.pk' +
+            'INNER JOIN child_parent as cp ' +
+            'ON c.pk=cp.child_id ' +
+            'INNER JOIN users as u ' +
+            'ON co.parent_id=u.pk ' +
+            'WHERE u.pk=?'
+            , [req.params.user_id], (err: any, rows: any) => {
+                if (err) {
+                    res.json(err);
+                    return;
+                }
+                console.log(rows);
+                res.json(rows);
+
+
+            });
+    });
+
     // Return child_parent connections by child_id
 
     app.get("/child-parent/:child_id", passport.authenticate('jwt', { session: false }), (req: any, res: any) => {

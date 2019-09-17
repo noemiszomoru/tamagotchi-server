@@ -4,13 +4,18 @@ import { UsersController } from "./controllers/UsersController";
 import { FoodSleepController } from "./controllers/FoodSleepController";
 import { LoginController } from "./controllers/LoginController";
 
-import * as fs from "fs";
+import fs from "fs";
 
-import * as mysql from "mysql";
-import express = require("express");
-import bodyParser = require("body-parser");
-import jwt = require("jsonwebtoken");
-import bcrypt = require('bcryptjs');
+import mysql from "mysql";
+import express from "express";
+import bodyParser from "body-parser";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import socketio from "socket.io";
+
+import { Message } from "./models/message.model";
+import { Group } from "./models/group.model";
+
 
 const CONFIG_FILE = '../server.json';
 
@@ -29,6 +34,8 @@ let config = {
         host: '192.168.2.12'
     }
 };
+
+
 
 //If we have a config file, then we will read it instead of the default one
 if (fs.existsSync(CONFIG_FILE)) {
@@ -117,7 +124,68 @@ app.get("/", (req: any, res: any) => {
 // UPDATE children SET name= 'Flavi' WHERE pk=4
 
 // start the Express server
-app.listen(config.listen.port, config.listen.host, () => {
+const server = app.listen(config.listen.port, config.listen.host, () => {
     console.log(`Server listening on ${config.listen.host}:${config.listen.port}`);
 });
+
+const io = socketio.listen(server);
+
+const connections: socketio.Socket[] = [];
+
+function createNamespace(i: number) {
+    var group = io.of('/group-' + groups[i]);
+
+    group.on('connection', (socket: socketio.Socket) => {
+        console.log(`Client connected from ${socket.handshake.address}`);
+        connections.push(socket);
+        console.log('Connected: %s sockets connected', connections.length);
+
+        // socket.on('join', function (room) {
+        //     socket.join(room);
+        // });
+
+        connection.query('SELECT * FROM `messages` ORDER BY created DESC', [], (err: any, res: Message) => {
+            if (err) {
+                throw err;
+            }
+            console.log(res);
+            return socket.emit('messageHistory', res);
+        });
+
+
+        // Disconnect
+        socket.on('disconnect', function () {
+            connections.splice(connections.indexOf(socket), 1);
+            console.log('Disconnected: %s sockets connected', connections.length);
+
+        });
+
+        socket.on('message', (data: Message) => {
+            group.emit('message', data);
+            var message = data as Message;
+            connection.query('INSERT INTO `messages` (username, message, created) VALUES (?, ?, NOW())', [message.username, message.message], (err: any, res: any) => {
+                if (err) {
+                    throw err;
+                }
+                return res;
+            });
+        });
+    });
+}
+
+var groups: Group[] = [];
+connection.query('SELECT * FROM `groups`', [], (err: any, rows: Group[]) => {
+    if (err) {
+        throw err;
+        return;
+    }
+    groups = rows;
+    return true;
+
+});
+console.log(groups);
+
+for (var i = 0; i <= groups.length - 1; i++) {
+    createNamespace(i);
+}
 
