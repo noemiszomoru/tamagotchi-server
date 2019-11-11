@@ -2,3 +2,6 @@
 /node_modules
 /server.js
 /controllers/*.js
+/provisioning/data
+/server.json
+/*.js

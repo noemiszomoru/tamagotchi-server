@@ -16,8 +16,9 @@ import socketio from "socket.io";
 import { Message } from "./models/message.model";
 import { Group } from "./models/group.model";
 
+import { isUndefined } from "util";
 
-const CONFIG_FILE = '../server.json';
+const CONFIG_FILES = ['./server.json', '../server.json'];
 
 // Default config object 
 let config = {
@@ -35,15 +36,23 @@ let config = {
     }
 };
 
+let CONFIG_FILE = undefined;
 
+for (let path of CONFIG_FILES) {
+    if (fs.existsSync(path)) {
+        CONFIG_FILE = path;
+        console.log(`Config file path set to ${CONFIG_FILE}`);
+    }
+}
+
+if (isUndefined(CONFIG_FILE)) {
+    console.log(`Server configuration file was not found.`);
+    process.exit();
+}
 
 //If we have a config file, then we will read it instead of the default one
-if (fs.existsSync(CONFIG_FILE)) {
-    config = JSON.parse(fs.readFileSync('../server.json').toString());
-    console.log(`Custom server configuration file loaded.`);
-} else {
-    console.log(`Server configuration file was not found at ${CONFIG_FILE}. Using default ...`);
-}
+config = JSON.parse(fs.readFileSync(CONFIG_FILE as string).toString());
+console.log(`Custom server configuration file loaded.`);
 
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
