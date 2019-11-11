@@ -2,10 +2,11 @@ import * as mysql from "mysql";
 import express = require("express");
 import { Child } from "../models/child.model";
 import { ChildWrapper } from "../models/child.wrapper.model";
+import { Database } from "../services/Database";
 
 const passport = require("passport");
 
-export function ChildrenController(app: express.Express, db: mysql.Connection) {
+export function ChildrenController(app: express.Express, db: Database) {
 
     // Return list of children
 

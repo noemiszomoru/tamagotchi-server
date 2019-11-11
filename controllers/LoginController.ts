@@ -5,6 +5,8 @@ import jwt = require("jsonwebtoken");
 import { User } from "../models/user.model";
 import { UsersController } from "./UsersController";
 import { IQueryResult } from "./models/IQueryResult";
+import { Database } from "../services/Database";
+
 const passport = require("passport");
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
@@ -40,7 +42,7 @@ export interface IUser {
     password: string;
 }
 
-export async function getTokenUser(db: mysql.Connection, token: string): Promise<IUser> {
+export async function getTokenUser(db: Database, token: string): Promise<IUser> {
     return new Promise((resolve, reject) => {
         db.query('SELECT users.pk, users.role, users.name FROM user_token LEFT JOIN users ON users.pk=user_token.user_id WHERE user_token.token=?', [token], (err: any, rows: IUser[]) => {
             if (err) {
@@ -61,7 +63,7 @@ export async function getTokenUser(db: mysql.Connection, token: string): Promise
 
 }
 
-export function LoginController(app: express.Express, db: mysql.Connection) {
+export function LoginController(app: express.Express, db: Database) {
 
     app.post("/sendEmail", (req: any, res: any) => {
 

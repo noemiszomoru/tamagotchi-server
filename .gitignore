@@ -4,4 +4,4 @@
 /controllers/*.js
 /provisioning/data
 /server.json
-/*.js
+/services/*.js

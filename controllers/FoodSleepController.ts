@@ -1,10 +1,11 @@
 import * as mysql from "mysql";
 import express = require("express");
 import { getTokenUser } from "./LoginController";
+import { Database } from "../services/Database";
 
 const passport = require("passport");
 
-export function FoodSleepController(app: express.Express, db: mysql.Connection) {
+export function FoodSleepController(app: express.Express, db: Database) {
 
 
     // Return list of food and sleep for all children

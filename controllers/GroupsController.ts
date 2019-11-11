@@ -1,10 +1,11 @@
 import * as mysql from "mysql";
 import express = require("express");
 import { Group } from "../models/group.model";
+import { Database } from "../services/Database";
 
 const passport = require("passport");
 
-export function GroupsController(app: express.Express, db: mysql.Connection) {
+export function GroupsController(app: express.Express, db: Database) {
 
 
     // Return list of groups

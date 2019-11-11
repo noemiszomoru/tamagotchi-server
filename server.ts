@@ -6,7 +6,7 @@ import { LoginController } from "./controllers/LoginController";
 
 import fs from "fs";
 
-import mysql from "mysql";
+// import mysql from "mysql";
 import express from "express";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
@@ -17,6 +17,7 @@ import { Message } from "./models/message.model";
 import { Group } from "./models/group.model";
 
 import { isUndefined } from "util";
+import { Database } from "./services/Database";
 
 const CONFIG_FILES = ['./server.json', '../server.json'];
 
@@ -53,6 +54,8 @@ if (isUndefined(CONFIG_FILE)) {
 //If we have a config file, then we will read it instead of the default one
 config = JSON.parse(fs.readFileSync(CONFIG_FILE as string).toString());
 console.log(`Custom server configuration file loaded.`);
+
+const db = new Database(config.db);
 
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
@@ -108,17 +111,11 @@ app.use(function (req, res, next) {
 
 //connect o mysql
 
-const connection = mysql.createConnection(config.db);
-
-connection.connect((err: any) => {
-    if (err) throw err;
-    console.log('Succefully connected to database');
-    GroupsController(app, connection);
-    ChildrenController(app, connection);
-    UsersController(app, connection);
-    FoodSleepController(app, connection);
-    LoginController(app, connection);
-});
+GroupsController(app, db);
+ChildrenController(app, db);
+UsersController(app, db);
+FoodSleepController(app, db);
+LoginController(app, db);
 
 
 // define a route handler for the default home page
@@ -153,7 +150,7 @@ function createNamespace(i: number) {
         //     socket.join(room);
         // });
 
-        connection.query('SELECT * FROM `messages` ORDER BY created DESC', [], (err: any, res: Message) => {
+        db.query('SELECT * FROM `messages` ORDER BY created DESC', [], (err: any, res: Message) => {
             if (err) {
                 throw err;
             }
@@ -172,7 +169,7 @@ function createNamespace(i: number) {
         socket.on('message', (data: Message) => {
             group.emit('message', data);
             var message = data as Message;
-            connection.query('INSERT INTO `messages` (username, message, created) VALUES (?, ?, NOW())', [message.username, message.message], (err: any, res: any) => {
+            db.query('INSERT INTO `messages` (username, message, created) VALUES (?, ?, NOW())', [message.username, message.message], (err: any, res: any) => {
                 if (err) {
                     throw err;
                 }
@@ -183,7 +180,8 @@ function createNamespace(i: number) {
 }
 
 var groups: Group[] = [];
-connection.query('SELECT * FROM `groups`', [], (err: any, rows: Group[]) => {
+
+db.query('SELECT * FROM `groups`', [], (err: any, rows: Group[]) => {
     if (err) {
         throw err;
         return;

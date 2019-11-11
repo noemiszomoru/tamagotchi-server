@@ -1,10 +1,11 @@
 import * as mysql from "mysql";
 import express = require("express");
 import { User } from "../models/user.model";
+import { Database } from "../services/Database";
 
 const passport = require("passport");
 
-export function UsersController(app: express.Express, db: mysql.Connection) {
+export function UsersController(app: express.Express, db: Database) {
 
 
     // Return list of users
