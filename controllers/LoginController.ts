@@ -20,7 +20,8 @@ const passportOpts = {
     secretOrKey: SECRET_KEY
 };
 
-const EXPIRES_IN = 24 * 60 * 60;
+// const EXPIRES_IN = 24 * 60 * 60;
+const EXPIRES_IN = 365 * 24 * 60 * 60;
 
 function buildToken(userId: number, userName: string, userRole: string, expiresIn: number) {
     return jwt.sign({
